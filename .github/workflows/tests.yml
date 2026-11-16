@@ -100,7 +100,7 @@ jobs:
           grep -q '"totalProducts":4' stats.json
           curl -fsS localhost:3000/products/recent | grep -q "HDMI Cable"
           curl -fsS localhost:3000/graphql -H 'content-type: application/json' \
-            -d '{"query":"{ products(search: \\"Cable\\") { name supplier { name } } }"}' | tee gql.json
+            -d '{"query":"{ products(search: \"Cable\") { name supplier { name } } }"}' | tee gql.json
           grep -q '"name":"Acme Distribution"' gql.json
           curl -fsS localhost:4200 | grep -qi "<app-root"
       - name: Show logs if something failed
