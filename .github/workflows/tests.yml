@@ -1,0 +1,143 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  flash-sale-checkout:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: flash-sale-checkout
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+          working-directory: flash-sale-checkout
+      - name: Unit tests
+        run: bundle exec rake test
+      - name: Load test (500 shoppers, 100 units)
+        run: |
+          bundle exec rackup -p 9292 > server.log 2>&1 &
+          for i in $(seq 1 30); do curl -s localhost:9292/health && break; sleep 1; done
+          python3 loadtest/flash_sale.py --stock 100 --buyers 500
+
+  cinema-frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: online-cinema-ticket-booking-system/frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: online-cinema-ticket-booking-system/frontend/package-lock.json
+      - run: npm ci
+      - run: npx ng build
+      - run: npx ng test --watch=false --browsers=ChromeHeadless
+
+  cinema-backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: online-cinema-ticket-booking-system/backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm ci
+      - name: Check every file parses
+        run: for f in main.js db.js routes/*.js; do node --check "$f"; done
+
+  inventory-backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: inventory-management-system/backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm ci
+      - run: npm test
+
+  inventory-frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: inventory-management-system/frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: inventory-management-system/frontend/package-lock.json
+      - run: npm ci
+      - run: npx ng build
+      - run: npx ng test --watch=false --browsers=ChromeHeadless
+
+  inventory-docker:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: inventory-management-system
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and start MySQL, API and site
+        run: docker compose up -d --build --wait
+      - name: Check the API end to end
+        run: |
+          curl -fsS localhost:3000/health
+          curl -fsS localhost:3000/dashboard/stats | tee stats.json
+          grep -q '"totalProducts":4' stats.json
+          curl -fsS localhost:3000/products/recent | grep -q "HDMI Cable"
+          curl -fsS localhost:4200 | grep -qi "<app-root"
+      - name: Show logs if something failed
+        if: failure()
+        run: docker compose logs
+
+  triage-bot:
+    runs-on: ubuntu-latest
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    defaults:
+      run:
+        working-directory: ci-cd-failure-triage-bot
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - name: Run tests
+        id: tests
+        run: |
+          pytest -v > test-output.txt 2>&1 || echo "failed=true" >> $GITHUB_OUTPUT
+          cat test-output.txt
+      - name: Explain failures
+        if: steps.tests.outputs.failed == 'true' && env.ANTHROPIC_API_KEY != ''
+        run: python triage.py test-output.txt >> $GITHUB_STEP_SUMMARY
+      - name: Fail the job if tests failed
+        if: steps.tests.outputs.failed == 'true'
+        run: exit 1
+
+  emotion-detection:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: emotion-detection
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt pytest
+      - run: pytest -q tests
