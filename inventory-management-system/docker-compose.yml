@@ -1,0 +1,40 @@
+# Runs the whole app locally: MySQL, the API and the Angular site.
+#   docker compose up --build
+# Then open http://localhost:4200
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-localdev}
+    volumes:
+      - ./backend/db.sql:/docker-entrypoint-initdb.d/db.sql:ro
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${DB_PASSWORD:-localdev}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build: ./backend
+    environment:
+      DB_HOST: db
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD:-localdev}
+      DB_NAME: ims
+      CORS_ORIGIN: http://localhost:4200
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+
+volumes:
+  db-data:

@@ -1,0 +1,42 @@
+{
+  "family": "inventory-backend",
+  "requiresCompatibilities": ["FARGATE"],
+  "networkMode": "awsvpc",
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "name": "backend",
+      "image": "ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/inventory-backend:latest",
+      "essential": true,
+      "portMappings": [{ "containerPort": 3000, "protocol": "tcp" }],
+      "environment": [
+        { "name": "DB_HOST", "value": "YOUR-RDS-ENDPOINT.REGION.rds.amazonaws.com" },
+        { "name": "DB_NAME", "value": "ims" },
+        { "name": "DB_USER", "value": "admin" },
+        { "name": "DB_SSL", "value": "true" },
+        { "name": "CORS_ORIGIN", "value": "https://YOUR-FRONTEND-DOMAIN" }
+      ],
+      "secrets": [
+        { "name": "DB_PASSWORD", "valueFrom": "arn:aws:secretsmanager:REGION:ACCOUNT_ID:secret:inventory/db-password" }
+      ],
+      "healthCheck": {
+        "command": ["CMD-SHELL", "wget -qO- http://localhost:3000/health || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 10
+      },
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/inventory-backend",
+          "awslogs-region": "REGION",
+          "awslogs-stream-prefix": "backend",
+          "awslogs-create-group": "true"
+        }
+      }
+    }
+  ]
+}
