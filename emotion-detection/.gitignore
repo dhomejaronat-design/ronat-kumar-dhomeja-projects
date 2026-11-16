@@ -1,0 +1,7 @@
+data/
+output/
+sample_videos/
+__pycache__/
+.venv/
+venv/
+.DS_Store
