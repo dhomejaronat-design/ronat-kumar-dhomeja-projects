@@ -1,0 +1,140 @@
+<h1 class="section-title">Select Seats</h1>
+
+<div *ngIf="!showtime">
+  Invalid showtime.
+</div>
+
+<div *ngIf="showtime && movie" class="booking-layout">
+
+  <section class="screen-info">
+    <h2>{{ movie.title }}</h2>
+    <p>
+      {{ showtime.startTime | date: 'MMM d, h:mm a' }} – {{ showtime.screen }}
+    </p>
+    <p>Price per seat: {{ showtime.price | currency: 'CAD' }}</p>
+    <p *ngIf="step !== 'complete'" class="hint">
+      Seats are held for 15 minutes once you continue to payment.
+    </p>
+  </section>
+
+
+  <section class="seats-section">
+    <div class="screen-bar">SCREEN</div>
+
+    <div class="seats-grid-wrapper">
+   
+      <div class="row-labels left">
+        <div *ngFor="let row of ['A', 'B', 'C', 'D', 'E']" class="row-label">
+          {{ row }}
+        </div>
+      </div>
+
+      <div class="seats-grid">
+        <button
+          *ngFor="let seat of seats"
+          class="seat"
+          [class.unavailable]="!seat.isAvailable"
+          [class.selected]="isSelected(seat) && seat.isAvailable"
+          [disabled]="!seat.isAvailable || step !== 'email'"
+          (click)="toggleSeat(seat)"
+        >
+          {{ seat.row }}{{ seat.number }}
+        </button>
+      </div>
+
+   
+      <div class="row-labels right">
+        <div *ngFor="let row of ['A', 'B', 'C', 'D', 'E']" class="row-label">
+          {{ row }}
+        </div>
+      </div>
+    </div>
+
+  
+    <div class="legend">
+      <div class="legend-item">
+        <span class="legend-box available"></span>
+        <span>Available</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-box selected"></span>
+        <span>Selected</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-box unavailable"></span>
+        <span>Unavailable</span>
+      </div>
+    </div>
+  </section>
+
+ 
+  <section class="booking-panel">
+    <h3>Booking</h3>
+
+    <p>
+      Seats:
+      <span *ngIf="selectedSeats.length === 0">None</span>
+      <span *ngIf="selectedSeats.length > 0">
+        {{ selectedSeatLabels }}
+      </span>
+    </p>
+
+    <p>Total: {{ totalPrice | currency: 'CAD' }}</p>
+
+
+    <div *ngIf="step === 'email'">
+      <label class="field-label">Email address</label>
+      <input
+        [(ngModel)]="customerEmail"
+        type="email"
+        placeholder="you@example.com"
+      />
+
+      <div *ngIf="emailError" class="error-message">
+        {{ emailError }}
+      </div>
+
+      <button
+        class="primary-btn"
+        [disabled]="selectedSeats.length === 0"
+        (click)="goToPayment()"
+      >
+        Continue to payment
+      </button>
+    </div>
+
+
+    <div *ngIf="step === 'payment'">
+      <p class="hint">
+        Seats are held for 15 minutes for {{ customerEmail }}.
+      </p>
+      <p *ngIf="holdRemainingSeconds > 0" class="hold-timer">
+        Time remaining: {{ holdTimeDisplay }}
+      </p>
+
+      <label class="field-label">Name on card</label>
+      <input [(ngModel)]="cardName" placeholder="Name on card" />
+
+      <label class="field-label">Card number</label>
+      <input [(ngModel)]="cardNumber" placeholder="1234 5678 9012 3456" />
+
+      <div *ngIf="paymentError" class="error-message">
+        {{ paymentError }}
+      </div>
+
+      <button class="primary-btn" (click)="completePayment()">
+        Pay and confirm
+      </button>
+    </div>
+
+   
+    <div *ngIf="step === 'complete'">
+      <p class="success-message">
+        {{ successMessage }}
+      </p>
+      <button class="primary-btn" (click)="newBooking()">
+        Book more seats
+      </button>
+    </div>
+  </section>
+</div>

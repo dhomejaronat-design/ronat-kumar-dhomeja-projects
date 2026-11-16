@@ -1,0 +1,169 @@
+<div class="showtimes-page" *ngIf="movie; else movieNotFound">
+
+
+  <section
+    class="trailer-hero"
+    *ngIf="movie"
+  >
+    <div
+      class="trailer-hero-bg"
+      [ngStyle]="{ 'background-image': 'url(' + movie.posterUrl + ')' }"
+    >
+      <div class="trailer-hero-overlay"></div>
+
+      <button
+        type="button"
+        class="trailer-hero-play"
+        (click)="openTrailer()"
+        [class.disabled]="!hasTrailer"
+        [disabled]="!hasTrailer"
+      >
+        <div class="trailer-play-circle">
+          <span class="triangle"></span>
+        </div>
+        <span class="trailer-hero-label">
+          {{ hasTrailer ? 'Watch trailer' : 'Trailer coming soon' }}
+        </span>
+      </button>
+    </div>
+  </section>
+
+
+  <section class="movie-hero">
+    <div class="movie-hero-poster">
+      <img
+        [src]="movie.posterUrl"
+        [alt]="movie.title + ' poster'"
+      />
+    </div>
+
+    <div class="movie-hero-info">
+      <h1 class="movie-title">{{ movie.title }}</h1>
+      <div class="movie-subtitle">NOW PLAYING ONLY IN THEATRES</div>
+
+      <div class="movie-meta">
+        <span>{{ movie.rating }}</span>
+        <span>{{ movie.genre }}</span>
+        <span>{{ movie.durationMinutes }} min</span>
+      </div>
+
+      <p class="movie-description">
+        {{ movie.description }}
+      </p>
+
+      <div class="movie-hero-actions">
+        <a
+          *ngIf="showtimes.length"
+          class="primary-btn"
+          [routerLink]="['/booking', showtimes[0].id]"
+        >
+          Get Tickets
+        </a>
+
+        <button
+          type="button"
+          class="secondary-btn"
+          (click)="openTrailer()"
+          [class.disabled]="!hasTrailer"
+          [disabled]="!hasTrailer"
+        >
+          Watch trailer
+        </button>
+      </div>
+    </div>
+  </section>
+
+  
+  <section class="showtimes-section">
+    <div class="showtimes-header">
+      <h2>Showtimes – {{ movie.title }}</h2>
+
+      <p class="showtimes-subtitle" *ngIf="showtimes.length">
+        Choose a showtime below to select your seats.
+      </p>
+      <p class="showtimes-subtitle" *ngIf="!showtimes.length">
+        No showtimes are available for this movie yet.
+      </p>
+    </div>
+
+    <div class="showtimes-list" *ngIf="showtimes.length">
+      <article *ngFor="let s of showtimes" class="showtime-card">
+        <div class="showtime-time">
+          {{ s.startTime | date: 'MMM d, h:mm a' }}
+        </div>
+
+        <div class="showtime-details">
+          <div>Screen: {{ s.screen }}</div>
+          <div>Total seats: {{ s.availableSeats }}</div>
+          <div>Price: {{ s.price | currency: 'CAD' }}</div>
+        </div>
+
+        <div class="showtime-action">
+          <a class="select-btn" [routerLink]="['/booking', s.id]">
+            Select seats
+          </a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+
+  <div
+    *ngIf="isTrailerOpen"
+    class="trailer-backdrop"
+    (click)="closeTrailer($event)"
+  >
+    <div class="trailer-modal" (click)="$event.stopPropagation()">
+      <button
+        type="button"
+        class="trailer-close"
+        (click)="closeTrailer()"
+        aria-label="Close trailer"
+      >
+        ×
+      </button>
+
+      <div class="trailer-header">
+        <h3>{{ movie.title }} – Trailer</h3>
+      </div>
+
+      <div class="trailer-frame-wrapper" *ngIf="hasTrailer; else noTrailer">
+      
+        <ng-container *ngIf="movie?.trailerUrl?.endsWith('.mp4'); else embedTrailer">
+          <video
+            [src]="movie!.trailerUrl"
+            controls
+            autoplay
+          ></video>
+        </ng-container>
+
+        <ng-template #embedTrailer>
+          <iframe
+            *ngIf="safeTrailerUrl"
+            [src]="safeTrailerUrl"
+            frameborder="0"
+            allowfullscreen
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          ></iframe>
+        </ng-template>
+      </div>
+
+      <ng-template #noTrailer>
+        <div class="no-trailer">
+          Trailer is not available for this movie yet.
+        </div>
+      </ng-template>
+    </div>
+  </div>
+</div>
+
+
+<ng-template #movieNotFound>
+  <div class="error-state">
+    <h2>Movie not found</h2>
+    <p>This movie doesn’t exist or the link is invalid.</p>
+    <a routerLink="/movies" class="secondary-btn">
+      Back to Movies
+    </a>
+  </div>
+</ng-template>

@@ -1,0 +1,341 @@
+<div class="admin-page">
+  <div class="admin-header">
+  <h1>Admin – Manage Movies</h1>
+
+  <div class="admin-header-right">
+    <button class="primary-btn" (click)="logout()">Logout</button>
+
+    <div class="search-box">
+      <input
+        type="text"
+        placeholder="Search movies..."
+        [value]="searchTerm"
+        (input)="onSearchChange($any($event.target).value)"
+      />
+    </div>
+
+    <button class="primary-btn" (click)="startCreate()">+ New Movie</button>
+  </div>
+</div>
+
+
+  <div class="admin-layout">
+   
+    <div class="admin-card movies-list">
+      <h2>Existing Movies</h2>
+
+      <table class="movies-table" *ngIf="filteredMovies.length > 0; else noMovies">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Poster</th>
+            <th>Title</th>
+            <th>Category</th>
+            <th>Language</th>
+            <th>Duration</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let movie of filteredMovies">
+            <td>{{ movie.id }}</td>
+            <td>
+              <div class="poster-thumb">
+                <img [src]="movie.posterUrl" [alt]="movie.title" />
+              </div>
+            </td>
+            <td>{{ movie.title }}</td>
+            <td>{{ movie.genre }}</td>
+            <td>{{ movie.language || '—' }}</td>
+            <td>{{ movie.durationMinutes }} min</td>
+            <td class="row-actions">
+              <button class="edit-btn" (click)="startEdit(movie)">Edit</button>
+              <button class="delete-btn" (click)="deleteMovie(movie)">
+                Delete
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <ng-template #noMovies>
+        <p class="empty-text">No movies found.</p>
+      </ng-template>
+    </div>
+
+    
+    <div class="admin-right">
+     
+      <div class="admin-card" *ngIf="isEditing || isCreating; else idleState">
+        <h2>{{ isEditing ? 'Edit Movie' : 'Create Movie' }}</h2>
+
+        <div *ngIf="errorMessage" class="error-message">
+          {{ errorMessage }}
+        </div>
+        <div *ngIf="successMessage" class="success-message">
+          {{ successMessage }}
+        </div>
+
+        <form (submit)="$event.preventDefault(); submitMovie()">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="title">Title *</label>
+              <input
+                id="title"
+                type="text"
+                [value]="form.title"
+                (input)="form.title = $any($event.target).value"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="category">Genre (Category) *</label>
+              <input
+                id="category"
+                type="text"
+                [value]="form.genre"
+                (input)="form.genre = $any($event.target).value"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="duration">Duration (minutes)</label>
+              <input
+                id="duration"
+                type="number"
+                min="0"
+                [value]="form.durationMinutes"
+                (input)="form.durationMinutes = +$any($event.target).value"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="language">Language</label>
+              <input
+                id="language"
+                type="text"
+                [value]="form.language"
+                (input)="form.language = $any($event.target).value"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="director">Director</label>
+              <input
+                id="director"
+                type="text"
+                [value]="form.director"
+                (input)="form.director = $any($event.target).value"
+              />
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="description">Description</label>
+            <textarea
+              id="description"
+              rows="4"
+              [value]="form.description"
+              (input)="form.description = $any($event.target).value"
+            ></textarea>
+          </div>
+
+         <div class="form-grid">
+  
+  <div class="form-group">
+    <label>Poster (upload)</label>
+    <input type="file" accept="image/*" (change)="onPosterSelected($event)" />
+    <p class="hint">
+      You can leave this empty to keep the current poster.
+    </p>
+
+  
+    <div
+      *ngIf="isEditing && selectedMovie?.posterUrl"
+      class="current-media"
+    >
+      <span class="current-label">Current:</span>
+      <div class="poster-thumb large">
+        <img
+          [src]="selectedMovie?.posterUrl"
+          [alt]="selectedMovie?.title || 'Poster'"
+        />
+      </div>
+    </div>
+  </div>
+
+ 
+  <div class="form-group">
+    <label>Trailer (video upload)</label>
+    <input type="file" accept="video/*" (change)="onTrailerSelected($event)" />
+    <p class="hint">
+      Trailer path is stored and used in the movie details page.
+    </p>
+
+    
+    <div
+      *ngIf="isEditing && selectedMovie?.trailerUrl"
+      class="current-media"
+    >
+      <span class="current-label">Current:</span>
+      <video
+        class="trailer-preview"
+        controls
+        [src]="selectedMovie?.trailerUrl"
+      ></video>
+    </div>
+  </div>
+</div>
+
+
+          <div class="actions-row">
+            <button
+              type="submit"
+              class="primary-btn"
+              [disabled]="loading"
+            >
+              {{ isEditing ? 'Save changes' : 'Create movie' }}
+            </button>
+            <button
+              type="button"
+              class="secondary-btn"
+              (click)="cancelEdit()"
+              [disabled]="loading"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <ng-template #idleState>
+        <div class="admin-card empty-state">
+          <p>Select a movie to edit, or click "+ New Movie".</p>
+        </div>
+      </ng-template>
+
+      
+      <div class="admin-card" *ngIf="selectedMovie">
+        <h2>Showtimes for "{{ selectedMovie.title }}"</h2>
+        <p class="subtitle">
+          Manage screenings for this movie (date, time, cinema).
+        </p>
+
+        <div *ngIf="showtimeError" class="error-message">
+          {{ showtimeError }}
+        </div>
+        <div *ngIf="showtimeSuccess" class="success-message">
+          {{ showtimeSuccess }}
+        </div>
+
+        <table
+          class="movies-table"
+          *ngIf="showtimes.length > 0; else noShowtimes"
+        >
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Day</th>
+              <th>Cinema</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let st of showtimes">
+              <td>{{ st.Dates }}</td>
+              <td>{{ st.Time }}</td>
+              <td>{{ st.day }}</td>
+              <td>{{ st.CinemaId }}</td>
+              <td class="row-actions">
+                <button
+                  type="button"
+                  class="edit-btn"
+                  (click)="startEditShowtime(st)"
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  class="delete-btn"
+                  (click)="deleteShowtime(st)"
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <ng-template #noShowtimes>
+          <p class="empty-text">No showtimes yet for this movie.</p>
+        </ng-template>
+
+        <div class="showtime-form">
+          <h3>{{ isEditingShowtime ? 'Edit showtime' : 'Add new showtime' }}</h3>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="st-date">Date</label>
+              <input
+                id="st-date"
+                type="date"
+                [value]="showtimeForm.date"
+                (input)="showtimeForm.date = $any($event.target).value"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="st-time">Time</label>
+              <input
+                id="st-time"
+                type="time"
+                [value]="showtimeForm.time"
+                (input)="showtimeForm.time = $any($event.target).value"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="st-day">Day</label>
+              <input
+                id="st-day"
+                type="text"
+                placeholder="Mon"
+                [value]="showtimeForm.day"
+                (input)="showtimeForm.day = $any($event.target).value"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="st-cinema">Cinema ID</label>
+              <input
+                id="st-cinema"
+                type="number"
+                min="1"
+                [value]="showtimeForm.cinemaId"
+                (input)="showtimeForm.cinemaId = +$any($event.target).value"
+              />
+            </div>
+          </div>
+
+          <div class="actions-row">
+            <button
+              type="button"
+              class="primary-btn"
+              (click)="saveShowtime()"
+            >
+              {{ isEditingShowtime ? 'Save showtime' : 'Add showtime' }}
+            </button>
+            <button
+              type="button"
+              class="secondary-btn"
+              (click)="startNewShowtime()"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

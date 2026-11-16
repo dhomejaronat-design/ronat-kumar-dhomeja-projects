@@ -1,0 +1,70 @@
+<!-- HERO SLIDER -->
+<section
+  class="hero"
+  *ngIf="featuredMovie as fm"
+  [@slideAnimation]="featuredIndex"
+>
+  <div class="hero-overlay"></div>
+
+  <div class="hero-content">
+    <h1>{{ fm.title }}</h1>
+    <p class="hero-subtitle">NOW PLAYING ONLY IN THEATRES</p>
+    <p class="hero-desc">
+      {{ fm.description }}
+    </p>
+    <div class="hero-meta">
+      <span>{{ fm.rating }}</span>
+      <span>{{ fm.genre }}</span>
+      <span>{{ fm.durationMinutes }} min</span>
+    </div>
+    <div class="hero-actions">
+      <button class="primary-btn" (click)="goToTickets()">Get Tickets</button>
+      <button class="secondary-btn" (click)="goToFeaturedShowtimes()">
+        View Showtimes
+      </button>
+    </div>
+  </div>
+
+
+  <div class="hero-poster">
+    <img [src]="fm.posterUrl" [alt]="fm.title" />
+  </div>
+
+
+  <button class="hero-arrow left" (click)="prevFeatured()">‹</button>
+  <button class="hero-arrow right" (click)="nextFeatured()">›</button>
+
+
+  <div class="hero-dots" *ngIf="movies.length > 1">
+    <button
+      *ngFor="let m of movies; let i = index"
+      class="hero-dot"
+      [class.active]="i === featuredIndex"
+      (click)="selectFeatured(i)"
+    ></button>
+  </div>
+</section>
+
+
+<section class="movies-section">
+  <h2 class="section-title">Movies</h2>
+  <div class="movie-row">
+    <article
+      *ngFor="let movie of movies"
+      class="movie-card"
+      (click)="openMovie(movie)"
+    >
+      <div class="poster-wrapper">
+        <img [src]="movie.posterUrl" [alt]="movie.title" />
+      </div>
+      <div class="movie-info">
+        <h3>{{ movie.title }}</h3>
+        <p class="meta">
+          <span>{{ movie.rating }}</span> •
+          <span>{{ movie.genre }}</span> •
+          <span>{{ movie.durationMinutes }} min</span>
+        </p>
+      </div>
+    </article>
+  </div>
+</section>

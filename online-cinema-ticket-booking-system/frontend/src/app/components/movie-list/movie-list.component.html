@@ -1,0 +1,40 @@
+<h1 class="section-title">Movies</h1>
+
+<div *ngIf="isLoading">Loading movies...</div>
+
+
+<p *ngIf="!isLoading && filteredMovies.length === 0">
+  No movies found for "{{ searchQuery }}".
+</p>
+
+
+<div
+  class="movie-grid"
+  *ngIf="!isLoading && filteredMovies.length > 0"
+>
+  <article
+    *ngFor="let movie of filteredMovies"
+    class="movie-card"
+  >
+    <div class="poster-wrapper">
+      <img [src]="movie.posterUrl" [alt]="movie.title" />
+    </div>
+    <div class="movie-info">
+      <h2>{{ movie.title }}</h2>
+      <p class="meta">
+        <span>{{ movie.rating }}</span> •
+        <span>{{ movie.genre }}</span> •
+        <span>{{ movie.durationMinutes }} min</span>
+      </p>
+      <p class="description">
+        {{ movie.description }}
+      </p>
+      <a
+        class="primary-btn small"
+        [routerLink]="['/movies', movie.id, 'showtimes']"
+      >
+        View Showtimes
+      </a>
+    </div>
+  </article>
+</div>
