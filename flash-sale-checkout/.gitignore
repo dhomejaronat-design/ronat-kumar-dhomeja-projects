@@ -1,0 +1,6 @@
+.bundle/
+vendor/
+*.db
+*.db-shm
+*.db-wal
+__pycache__/
