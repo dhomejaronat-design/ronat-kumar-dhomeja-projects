@@ -2,13 +2,14 @@
 
 A full stack app for tracking products, categories and suppliers. The dashboard shows live totals, and every list supports adding, editing, deleting and searching.
 
-**Stack:** Angular 20 and TypeScript (frontend), Node.js and Express 5 (REST API), MySQL, Docker, AWS RDS, Amazon ECS, CloudWatch
+**Stack:** Angular 20 and TypeScript (frontend), Node.js and Express 5 (REST and GraphQL APIs), MySQL, Docker, AWS RDS, Amazon ECS, CloudWatch
 
 ## Features
 
 - **Dashboard** with total products, total units in stock, suppliers and categories
 - **Products** with SKU, category, supplier, price and quantity, plus search by name and a "recently added" list
 - **Categories** and **suppliers** with full create, read, update and delete
+- **GraphQL API** at `/graphql` next to the REST API, so a client can fetch products with their category and supplier in one request
 - **Relational schema** with foreign keys (deleting a supplier keeps its products, deleting a category in use is blocked), unique SKUs and indexes on common lookups
 - Prices stored in **whole cents** to avoid rounding errors
 - **Docker Compose** runs MySQL, the API and the site with one command
@@ -23,6 +24,7 @@ backend/            Node.js and Express API (port 3000)
   main.js           server entry point and graceful shutdown
   app.js            routes, health check, request logging
   logger.js         JSON logs for CloudWatch
+  graphql.js        GraphQL schema and resolvers
   db.js             MySQL connection (settings from environment variables)
   db.sql            schema and sample data
   routes/           products, categories, suppliers, dashboard
@@ -87,6 +89,45 @@ Open http://localhost:4200.
 
 All queries use parameters (`?`), never string building, so user input can't change the SQL.
 
+## GraphQL
+
+`POST /graphql` with a JSON body `{ "query": "..." }`.
+
+```graphql
+# Products with their category and supplier, in one request
+{
+  products(search: "Cable") {
+    name
+    sku
+    priceCents
+    quantity
+    category { name }
+    supplier { name email }
+  }
+}
+
+# What's running low
+{ lowStock(threshold: 10) { name quantity } }
+
+# Dashboard totals
+{ stats { totalProducts totalStock totalSuppliers totalCategories } }
+
+# Add a product, then restock it
+mutation {
+  addProduct(input: { name: "Mouse", sku: "M-1", categoryId: 1, priceCents: 2500 }) { id name }
+}
+mutation { setStock(id: 1, quantity: 75) { name quantity } }
+```
+
+Try it from the terminal:
+
+```bash
+curl -s localhost:3000/graphql -H 'content-type: application/json' \
+  -d '{"query":"{ lowStock(threshold: 40) { name quantity } }"}'
+```
+
+Category and supplier are only looked up when a query asks for them, so `{ products { name } }` runs a single SQL query.
+
 ## Deploy to AWS
 
 The backend runs as a container on **Amazon ECS (Fargate)**, talks to **Amazon RDS for MySQL** over SSL, and sends its logs to **CloudWatch**.
@@ -126,6 +167,6 @@ filter msg = "request" | stats avg(ms), max(ms), count() by path | sort avg(ms) 
 ## Tests
 
 ```bash
-cd backend && npm test        # 15 API tests with a fake database
+cd backend && npm test        # 23 tests for the REST and GraphQL APIs, with a fake database
 cd frontend && npx ng test    # 7 Angular tests
 ```

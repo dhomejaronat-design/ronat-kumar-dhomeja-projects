@@ -24,6 +24,7 @@ app.use("/categories", require("./routes/categories"));
 app.use("/suppliers", require("./routes/suppliers"));
 app.use("/products", require("./routes/products"));
 app.use("/dashboard", require("./routes/dashboard"));
+app.all("/graphql", require("./graphql"));
 
 app.get("/", (req, res) => res.send("Inventory API is running"));
 
