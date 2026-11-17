@@ -1,0 +1,11 @@
+{
+  "name": "payment-ledger",
+  "version": "1.0.0",
+  "description": "Small payments API with idempotency keys, a double-entry ledger and a velocity fraud check",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test --experimental-test-coverage"
+  }
+}

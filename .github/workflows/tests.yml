@@ -25,6 +25,18 @@ jobs:
           for i in $(seq 1 30); do curl -s localhost:9292/health && break; sleep 1; done
           python3 loadtest/flash_sale.py --stock 100 --buyers 500
 
+  payment-ledger:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: payment-ledger
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm test
+
   cinema-frontend:
     runs-on: ubuntu-latest
     defaults:
