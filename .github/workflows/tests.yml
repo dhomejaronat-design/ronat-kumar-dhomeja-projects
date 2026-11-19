@@ -25,6 +25,53 @@ jobs:
           for i in $(seq 1 30); do curl -s localhost:9292/health && break; sleep 1; done
           python3 loadtest/flash_sale.py --stock 100 --buyers 500
 
+  impulse-physics:
+    name: impulse-physics (${{ matrix.os }} / ${{ matrix.compiler }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, compiler: gcc, cxx: g++ }
+          - { os: ubuntu-latest, compiler: clang, cxx: clang++ }
+          - { os: macos-latest, compiler: apple-clang, cxx: clang++ }
+          - { os: windows-latest, compiler: msvc, cxx: cl }
+    defaults:
+      run:
+        working-directory: impulse-physics
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
+      - name: Build
+        run: cmake --build build --config Release --parallel
+      - name: Test
+        run: ctest --test-dir build -C Release --output-on-failure
+      - name: Benchmark smoke run
+        if: runner.os == 'Linux'
+        run: ./build/impulse_bench --bodies 1000 --steps 60 --warmup 10
+
+  impulse-sanitizers:
+    name: impulse-physics (ASan + UBSan, TSan)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: impulse-physics
+    steps:
+      - uses: actions/checkout@v4
+      - name: ASan + UBSan
+        run: |
+          cmake -S . -B asan -DCMAKE_BUILD_TYPE=Debug -DIMPULSE_SANITIZE=ON -DIMPULSE_BUILD_BENCH=OFF
+          cmake --build asan --parallel
+          ctest --test-dir asan --output-on-failure
+      - name: TSan (job system and broad phase)
+        env:
+          TSAN_OPTIONS: halt_on_error=1
+        run: |
+          cmake -S . -B tsan -DCMAKE_BUILD_TYPE=Debug -DIMPULSE_BUILD_BENCH=OFF -DCMAKE_CXX_FLAGS="-fsanitize=thread -O1 -g" -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=thread"
+          cmake --build tsan --parallel
+          ./tsan/impulse_tests --gtest_filter='JobSystem.*:Broadphase.*:World.Determ*'
+
   payment-ledger:
     runs-on: ubuntu-latest
     defaults:

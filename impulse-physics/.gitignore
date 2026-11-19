@@ -1,0 +1,10 @@
+build*/
+out/
+.vs/
+.vscode/
+.idea/
+cmake-build-*/
+*.csv
+!bench/results_*.csv
+compile_commands.json
+.DS_Store

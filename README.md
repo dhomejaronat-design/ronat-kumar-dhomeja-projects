@@ -7,6 +7,7 @@ Software projects by Ronat Kumar Dhomeja, Computer Science student at the Univer
 | Project | What it is | Stack |
 |---|---|---|
 | [Flash Sale Checkout](flash-sale-checkout) | A checkout API for limited product drops that never oversells: 500 shoppers racing for 100 units buy exactly 100 | Ruby, Rack, SQLite, Minitest, Python |
+| [Impulse Physics Engine](impulse-physics) | A C++20 rigid-body physics engine with three broad phases, an impulse solver with friction, a multithreaded job system and deterministic results, simulating 16,000 spheres at 60 FPS | C++20, CMake, GoogleTest, raylib |
 | [Payment Ledger](payment-ledger) | A payments API with idempotency keys so retries never charge twice, a double-entry ledger that always sums to zero, and a velocity fraud check | JavaScript, Node.js, node:test |
 | [Online Cinema Ticket Booking System](online-cinema-ticket-booking-system) | A full stack cinema booking app with a live seat map, showtimes and an admin dashboard | Angular, TypeScript, Node.js, Express, MySQL |
 | [Video Emotion Detection](emotion-detection) | A CNN trained from scratch that reads emotions and states like drowsiness from live video, at 64.73% test accuracy | Python, TensorFlow, Keras, OpenCV |
