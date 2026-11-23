@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: stg_trips
+    description: Clean trips from the Spark job, one row per trip.
+    columns:
+      - name: trip_id
+        tests: [unique, not_null]
+      - name: trip_date
+        tests: [not_null]
+
+  - name: stg_experiment_assignments
+    description: Rider-level experiment assignments.
+    columns:
+      - name: rider_id
+        tests: [unique, not_null]
+      - name: variant
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["control", "treatment"]

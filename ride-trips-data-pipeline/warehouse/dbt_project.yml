@@ -1,0 +1,32 @@
+name: ride_trips
+version: "1.0.0"
+config-version: 2
+profile: ride_trips
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  # Absolute path to the pipeline's data folder (raw/, clean/, ...). Set by the Makefile and the DAG.
+  data_dir: "../data"
+  # When set (YYYY-MM-DD), incremental models reload only that day.
+  run_date: null
+
+models:
+  ride_trips:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table
+
+seeds:
+  ride_trips:
+    zones:
+      +column_types:
+        zone_id: integer
+        zone_name: varchar
+        area: varchar

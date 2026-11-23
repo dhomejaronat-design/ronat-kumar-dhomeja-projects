@@ -1,0 +1,32 @@
+zone_id,zone_name,area
+1,Financial District,Downtown
+2,Old Port,Downtown
+3,Chinatown,Downtown
+4,Union Station,Downtown
+5,Entertainment District,Downtown
+6,Harbourfront,Downtown
+7,University,Midtown
+8,Museum District,Midtown
+9,Yorkville,Midtown
+10,Rosedale,Midtown
+11,Midtown Square,Midtown
+12,Riverside,East End
+13,Leslieville,East End
+14,Beaches,East End
+15,East Market,East End
+16,Danforth,East End
+17,Liberty Village,West End
+18,Junction,West End
+19,High Park,West End
+20,Little Italy,West End
+21,Ossington,West End
+22,North York,North
+23,Willowdale,North
+24,York Mills,North
+25,Lawrence Park,North
+26,Scarborough,Suburbs
+27,Etobicoke,Suburbs
+28,Markham,Suburbs
+29,Mississauga,Suburbs
+30,Airport Terminal 1,Airport
+31,Airport Terminal 3,Airport

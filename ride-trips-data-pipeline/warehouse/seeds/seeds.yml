@@ -1,0 +1,7 @@
+version: 2
+seeds:
+  - name: zones
+    description: Pickup and drop-off zones in the city, grouped into areas.
+    columns:
+      - name: zone_id
+        tests: [unique, not_null]

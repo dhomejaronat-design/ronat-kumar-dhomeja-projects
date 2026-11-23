@@ -1,0 +1,69 @@
+version: 2
+
+models:
+  - name: dim_zones
+    columns:
+      - name: zone_id
+        tests: [unique, not_null]
+
+  - name: dim_date
+    columns:
+      - name: date_day
+        tests: [unique, not_null]
+
+  - name: fact_trips
+    description: One row per clean trip. Grain = trip.
+    columns:
+      - name: trip_id
+        tests: [unique, not_null]
+      - name: trip_date
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_day
+      - name: pickup_zone_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_zones')
+                field: zone_id
+      - name: dropoff_zone_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_zones')
+                field: zone_id
+      - name: status
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["completed", "cancelled_by_rider", "cancelled_by_driver"]
+
+  - name: agg_daily_zone_metrics
+    description: Daily demand, completion and revenue per pickup zone.
+
+  - name: experiment_rider_metrics
+    description: Rider-level request and completion counts for the A/B analysis.
+    columns:
+      - name: rider_id
+        tests: [unique, not_null]
+
+unit_tests:
+  - name: cancel_rate_counts_only_cancelled_trips
+    description: Two of four requests in a zone were cancelled, so the cancel rate is 0.5.
+    model: agg_daily_zone_metrics
+    given:
+      - input: ref('fact_trips')
+        rows:
+          - {trip_date: 2027-05-03, pickup_zone_id: 1, is_completed: true,  fare: 10.0, duration_min: 12, wait_min: 4}
+          - {trip_date: 2027-05-03, pickup_zone_id: 1, is_completed: true,  fare: 20.0, duration_min: 18, wait_min: 6}
+          - {trip_date: 2027-05-03, pickup_zone_id: 1, is_completed: false, fare: null, duration_min: null, wait_min: null}
+          - {trip_date: 2027-05-03, pickup_zone_id: 1, is_completed: false, fare: null, duration_min: null, wait_min: null}
+      - input: ref('dim_zones')
+        rows:
+          - {zone_id: 1, zone_name: Old Port, area: Downtown}
+    expect:
+      rows:
+        - {trip_date: 2027-05-03, zone_id: 1, requests: 4, completed_trips: 2, cancel_rate: 0.5, gross_fare: 30.0, avg_fare: 15.0}

@@ -1,0 +1,14 @@
+data/
+warehouse/target/
+warehouse/logs/
+warehouse/dbt_packages/
+logs/
+.venv/
+__pycache__/
+.pytest_cache/
+spark-warehouse/
+metastore_db/
+derby.log
+*.duckdb
+*.duckdb.wal
+warehouse/.user.yml
