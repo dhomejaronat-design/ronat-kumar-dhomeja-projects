@@ -1,6 +1,6 @@
-# impulse
+# Impulse: C++20 Rigid-Body Physics Engine
 
-A small, readable **C++20 rigid-body physics engine**. It has three interchangeable broad phases, an impulse-based contact solver with friction and rolling resistance, sleeping, a multithreaded job system, and deterministic results for any thread count.
+**Impulse** is a small, readable **C++20 rigid-body physics engine**. It has three interchangeable broad phases, an impulse-based contact solver with friction and rolling resistance, sleeping, a multithreaded job system, and deterministic results for any thread count.
 
 It ships with 30 unit tests (including physics checks against textbook results), a benchmark tool and an interactive raylib viewer.
 

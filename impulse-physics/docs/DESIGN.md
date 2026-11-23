@@ -1,4 +1,4 @@
-# Design notes
+# Impulse: design notes
 
 ## 1. Broad phase
 

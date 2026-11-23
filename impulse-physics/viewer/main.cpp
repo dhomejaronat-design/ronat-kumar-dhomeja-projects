@@ -68,7 +68,7 @@ struct App {
 
 int main() {
     SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT);
-    InitWindow(1280, 800, "impulse - C++20 rigid-body physics");
+    InitWindow(1280, 800, "Impulse: C++20 Rigid-Body Physics Engine");
 
     App app;
     app.config.threads = std::max(1u, std::thread::hardware_concurrency());
