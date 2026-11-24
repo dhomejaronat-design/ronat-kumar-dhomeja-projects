@@ -246,3 +246,23 @@ jobs:
           python-version: "3.11"
       - run: pip install -r requirements.txt pytest
       - run: pytest -q tests
+
+  emotion-detection-deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: emotion-detection
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install TensorFlow, PyTorch (CPU), ONNX Runtime and OpenVINO
+        run: |
+          pip install -r requirements.txt pytest
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install onnx onnxscript onnxruntime openvino nncf
+      - name: PyTorch port, runtime agreement, PyTorch training and INT8 quantization tests
+        run: pytest -q tests
+      - name: Benchmark every runtime
+        run: python deploy/benchmark.py --runs 200 --out "$RUNNER_TEMP/benchmark.md"

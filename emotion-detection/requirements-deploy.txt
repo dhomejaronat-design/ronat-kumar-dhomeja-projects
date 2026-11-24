@@ -1,0 +1,7 @@
+# Extra packages for the PyTorch port, ONNX export and OpenVINO inference (deploy/).
+torch>=2.2
+onnx>=1.16
+onnxscript>=0.2
+onnxruntime>=1.18
+openvino>=2024.4
+nncf>=2.12

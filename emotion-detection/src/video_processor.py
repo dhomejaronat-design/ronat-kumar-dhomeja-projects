@@ -8,7 +8,6 @@ import os
 from collections import deque
 import cv2
 import numpy as np
-import tensorflow as tf
 
 from face_detector import FaceDetector
 from state_analyzer import StateAnalyzer
@@ -36,18 +35,28 @@ STATE_COLOURS = {
 
 
 class VideoProcessor:
-    def __init__(self, model_path, output_dir='output', smoothing_window=7):
+    def __init__(self, model_path, output_dir='output', smoothing_window=7,
+                 backend='keras', precision='fp32'):
         """
         smoothing_window : number of recent frame predictions to average.
                            Higher = smoother labels but slower to react.
                            7 frames ≈ 0.3 seconds at 25 FPS.
+        backend          : 'keras' (original model), 'pytorch', 'onnx' or 'openvino'.
+        precision        : OpenVINO only: 'fp32', 'fp16', 'bf16' or 'int8'.
         """
-        if not os.path.exists(model_path):
-            raise FileNotFoundError(
-                f"No trained model at {model_path}. Run 'python src/train.py' first."
-            )
-        print(f"Loading model from {model_path}...")
-        self.model = tf.keras.models.load_model(model_path)
+        if backend == 'keras':
+            if not os.path.exists(model_path):
+                raise FileNotFoundError(
+                    f"No trained model at {model_path}. Run 'python src/train.py' first."
+                )
+            import tensorflow as tf
+            print(f"Loading model from {model_path}...")
+            keras_model = tf.keras.models.load_model(model_path)
+            self.predict = lambda x: keras_model(x, training=False).numpy()
+        else:
+            from inference import EmotionModel
+            print(f"Loading {backend} model ({precision})...")
+            self.predict = EmotionModel(backend, precision).predict
         print("Model loaded.")
 
         self.face_detector = FaceDetector()
@@ -63,7 +72,7 @@ class VideoProcessor:
         Predict emotion with temporal smoothing.
         Averages probabilities over the last N frames for stability.
         """
-        probs = self.model.predict(face_tensor, verbose=0)[0]  
+        probs = self.predict(face_tensor)[0]  
         self.prob_history.append(probs)
 
       
@@ -166,7 +175,7 @@ class VideoProcessor:
                     current_eye_count = len(self.face_detector.detect_eyes(face_roi_gray))
                 else:
             
-                    probs = self.model.predict(face_tensor, verbose=0)[0]
+                    probs = self.predict(face_tensor)[0]
                     emotion_idx = int(np.argmax(probs))
                     confidence = float(probs[emotion_idx])
 
